@@ -1,0 +1,69 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+let tasks = [];
+
+app.use(bodyParser.json());
+
+app.post('/tasks', (req, res) => {
+  const { title, description, due_date, priority } = req.body;
+  const newTask = {
+    id: tasks.length + 1,
+    title,
+    description,
+    due_date,
+    priority
+  };
+  tasks.push(newTask);
+  res.status(201).json(newTask);
+});
+
+app.get('/tasks', (req, res) => {
+  res.json(tasks);
+});
+
+app.get('/tasks/:id', (req, res) => {
+  const taskId = parseInt(req.params.id);
+  const task = tasks.find(task => task.id === taskId);
+  if (task) {
+    res.json(task);
+  } else {
+    res.status(404).json({ message: 'Task not found' });
+  }
+});
+
+app.put('/tasks/:id', (req, res) => {
+  const taskId = parseInt(req.params.id);
+  const { title, description, due_date, priority } = req.body;
+  const taskIndex = tasks.findIndex(task => task.id === taskId);
+  if (taskIndex !== -1) {
+    tasks[taskIndex] = {
+      id: taskId,
+      title,
+      description,
+      due_date,
+      priority
+    };
+    res.json(tasks[taskIndex]);
+  } else {
+    res.status(404).json({ message: 'Task not found' });
+  }
+});
+
+app.delete('/tasks/:id', (req, res) => {
+  const taskId = parseInt(req.params.id);
+  const taskIndex = tasks.findIndex(task => task.id === taskId);
+  if (taskIndex !== -1) {
+    tasks.splice(taskIndex, 1);
+    res.sendStatus(204);
+  } else {
+    res.status(404).json({ message: 'Task not found' });
+  }
+});
+
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
