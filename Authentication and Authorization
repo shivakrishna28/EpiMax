@@ -1,0 +1,35 @@
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
+
+
+app.post('/register', async (req, res) => {
+    const { username, password } = req.body;
+    
+    const hashedPassword = await bcrypt.hash(password, 10);
+  
+    db.run('INSERT INTO Users (username, password_hash) VALUES (?, ?)', [username, hashedPassword], function(err) {
+        if (err) {
+            console.error(err.message);
+            return res.status(500).json({ error: 'Failed to register user' });
+        }
+        res.status(201).json({ message: 'User registered successfully' });
+    });
+});
+
+
+app.post('/login', async (req, res) => {
+    const { username, password } = req.body;
+    
+    const user = await getUserByUsername(username);
+    if (!user) {
+        return res.status(401).json({ error: 'Invalid username or password' });
+    }
+    
+    const passwordMatch = await bcrypt.compare(password, user.password_hash);
+    if (!passwordMatch) {
+        return res.status(401).json({ error: 'Invalid username or password' });
+    }
+  
+    const token = jwt.sign({ userId: user.id }, 'your_secret_key', { expiresIn: '1h' });
+    res.json({ token });
+});
